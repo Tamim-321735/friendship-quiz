@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friendship Test Quiz - Mobile Friendly (Landscape)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base Styles (some might be overridden by Tailwind) */
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%); color: #1e293b; }
+        .quiz-container { max-width: 600px; margin: 2rem auto; padding: 2.5rem; background-color: rgba(255, 255, 255, 0.97); backdrop-filter: blur(12px); border-radius: 28px; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22); transition: padding 0.3s ease, margin 0.3s ease; }
+        .btn { padding: 0.9rem 1.8rem; border-radius: 14px; font-weight: 600; transition: all 0.25s ease-out; cursor: pointer; border: none; text-transform: uppercase; letter-spacing: 0.75px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn:active { transform: translateY(1px) scale(0.98); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .btn-primary { background-color: #4A90E2; color: white; }
+        .btn-primary:hover { background-color: #357ABD; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(74, 144, 226, 0.35); }
+        .btn-secondary { background-color: #50E3C2; color: white; }
+        .btn-secondary:hover { background-color: #38C1A5; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(80, 227, 194, 0.3); }
+        .btn-skip { background-color: #f5a623; color: white; }
+        .btn-skip:hover { background-color: #d98e1a; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(245, 166, 35, 0.3); }
+        .question-card { background-color: #ffffff; padding: 2rem; border-radius: 20px; margin-bottom: 1.5rem; border: 1px solid #e8e8e8; animation: fadeInScale 0.5s ease-out forwards; opacity: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.07); }
+        .option-label { display: block; padding: 1rem 1.5rem; margin-bottom: 0.85rem; border-radius: 16px; border: 1.5px solid #d1d5db; cursor: pointer; transition: background-color 0.2s, border-color 0.2s, transform 0.2s; background-color: #f9fafb; }
+        .option-label:hover { background-color: #eef2ff; border-color: #4A90E2; transform: translateX(5px); }
+        .option-label input[type="radio"] { margin-right: 1rem; accent-color: #4A90E2; }
+        .option-label.selected { background-color: #4A90E2; border-color: #357ABD; color: white; font-weight: 500; }
+        .option-label.selected:hover { background-color: #3f80cb; }
+        #leaderboard { background-color: #f0f4f8; padding: 1.5rem; border-radius: 18px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.06); }
+        .leaderboard-item { display: flex; align-items: center; padding: 0.9rem 1rem; border-bottom: 1px solid #dde4eb; border-radius: 12px; margin-bottom: 0.5rem; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; }
+        .leaderboard-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+        .leaderboard-item:last-child { border-bottom: none; margin-bottom: 0; }
+        .leaderboard-item .rank { font-size: 1.1em; font-weight: 700; color: #4A90E2; margin-right: 1rem; min-width: 30px; text-align: center; }
+        .leaderboard-item .name { flex-grow: 1; font-weight: 500; color: #334155; }
+        .leaderboard-item .score { font-weight: 600; color: #10b981; padding: 0.3rem 0.7rem; background-color: #f0fdf4; border-radius: 8px; }
+        #shareLinkInput { width: 100%; padding: 0.85rem 1.25rem; border: 1.5px solid #cbd5e1; border-radius: 16px; margin-bottom: 0.75rem; background-color: #f8fafc; font-size: 0.9rem; text-align: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
+        .error-message { color: #D0021B; font-size: 0.9rem; margin-top: 0.75rem; font-weight: 500; padding: 0.5rem; background-color: rgba(208, 2, 27, 0.05); border-radius: 8px; }
+        .info-message { color: #4A90E2; font-size: 0.9rem; margin-top: 0.75rem; font-weight: 500; padding: 0.5rem; background-color: rgba(74, 144, 226, 0.08); border-radius: 8px; margin-bottom: 1rem; }
+        .view { animation: slideInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        input[type="text"] { border-radius: 16px; padding: 0.85rem; border: 1.5px solid #cbd5e1; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
+        label { color: #334155; }
+        h1, h2, h3 { color: #2c3e50; }
+        .button-group { display: flex; gap: 0.75rem; }
+        .button-group .btn { flex-grow: 1; }
+
+        /* General Mobile adjustments (Portrait & Small Landscape) */
+        @media (max-width: 767px) { /* Targets phones and small tablets in portrait */
+            body.p-4 { /* Overriding Tailwind's p-4 on body for mobile */
+                padding: 0.5rem !important;
+            }
+            .quiz-container {
+                margin-top: 0.5rem;
+                margin-bottom: 0.5rem;
+                padding: 1.25rem; /* Approx 20px */
+                border-radius: 20px;
+                width: auto; /* Let body padding and its own padding define effective width */
+                max-height: calc(100vh - 1rem); /* 0.5rem top + 0.5rem bottom body padding */
+                overflow-y: auto; /* Crucial for content exceeding viewport height */
+            }
+
+            /* Adjust Tailwind's text sizes for mobile */
+            h1.text-4xl { font-size: 1.875rem !important; line-height: 2.25rem !important; } /* Tailwind text-3xl */
+            h2.text-3xl, #scoreTitle.text-3xl { font-size: 1.5rem !important; line-height: 2rem !important; } /* Tailwind text-2xl */
+            h3.text-2xl { font-size: 1.25rem !important; line-height: 1.75rem !important; } /* Tailwind text-xl */
+            p.text-xl, #scoreOutOf.text-xl { font-size: 1.125rem !important; line-height: 1.75rem !important; } /* Tailwind text-lg */
+            p.text-lg, #quizTakerWelcome.text-md { font-size: 1rem !important; line-height: 1.5rem !important; } /* Tailwind text-base */
+            p.text-md { font-size: 0.9rem !important; }
+            p.text-sm { font-size: 0.8rem !important; }
+
+
+            .btn {
+                padding: 0.8rem 1.1rem;
+                font-size: 0.875rem; /* Tailwind text-sm */
+            }
+            .option-label {
+                padding: 0.75rem 1rem;
+                margin-bottom: 0.6rem;
+                font-size: 0.9rem;
+            }
+            .question-card {
+                padding: 1rem; /* Reduced padding */
+                margin-bottom: 1rem;
+            }
+            .question-card p.font-semibold.text-xl { /* Question text in card */
+                 font-size: 1rem !important; /* Tailwind text-base */
+                 line-height: 1.4;
+            }
+
+            #scoreDisplay.text-6xl {
+                font-size: 3rem !important; /* Tailwind text-5xl */
+                margin-bottom: 0.25rem; /* Reduced margin */
+            }
+            #leaderboard {
+                padding: 1rem;
+            }
+            .leaderboard-item {
+                padding: 0.6rem 0.75rem;
+                font-size: 0.875rem;
+            }
+            input[type="text"], #shareLinkInput {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+            .button-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .button-group .btn {
+                width: 100%;
+            }
+            /* Reduce Tailwind margins */
+            .mb-8 { margin-bottom: 1.5rem !important; }
+            .mb-6 { margin-bottom: 1rem !important; }
+            .mb-4 { margin-bottom: 0.75rem !important; }
+            .my-3 { margin-top: 0.5rem !important; margin-bottom: 0.5rem !important; }
+        }
+
+        /* Specific adjustments for Mobile Landscape */
+        /* Targets phones in landscape. Max-height is key. Max-width helps exclude tablets in landscape. */
+        @media (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
+            body.p-4 {
+                padding: 0.25rem !important; /* Even smaller body padding */
+            }
+            .quiz-container {
+                padding: 0.75rem;
+                margin-top: 0.25rem;
+                margin-bottom: 0.25rem;
+                max-height: calc(100vh - 0.5rem); /* Adjusted for new body padding */
+                /* overflow-y: auto; is inherited from the (max-width: 767px) rule */
+            }
+
+            /* More aggressive font size reduction in landscape */
+            h1.text-4xl { font-size: 1.5rem !important; line-height: 1.75rem !important; }
+            h2.text-3xl, #scoreTitle.text-3xl { font-size: 1.25rem !important; line-height: 1.5rem !important; }
+            h3.text-2xl { font-size: 1.1rem !important; line-height: 1.3rem !important; }
+            p.text-xl, #scoreOutOf.text-xl { font-size: 1rem !important; }
+            p.text-lg, #quizTakerWelcome.text-md { font-size: 0.875rem !important; line-height: 1.25rem !important; }
+            p.text-md { font-size: 0.8rem !important; }
+
+            .btn {
+                padding: 0.6rem 0.9rem;
+                font-size: 0.8rem;
+            }
+            .option-label {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.85rem;
+                margin-bottom: 0.4rem;
+            }
+            .question-card {
+                padding: 0.75rem;
+                margin-bottom: 0.6rem;
+            }
+             .question-card p.font-semibold.text-xl {
+                font-size: 0.9rem !important;
+                line-height: 1.3;
+            }
+
+            #scoreDisplay.text-6xl {
+                font-size: 2.25rem !important; /* Tailwind text-3xl or 4xl */
+            }
+            #leaderboard {
+                padding: 0.5rem;
+            }
+            .leaderboard-item {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.8rem;
+            }
+            input[type="text"], #shareLinkInput {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.85rem;
+            }
+            #shareLinkInput { margin-bottom: 0.5rem !important; }
+
+            /* Button group in landscape: could stack or go horizontal if space permits */
+            .button-group {
+                 flex-direction: row; /* Try horizontal for landscape if buttons are short */
+                 gap: 0.4rem;
+            }
+            .button-group .btn {
+                flex-grow: 1; /* Let them share space */
+                width: auto; /* Override previous 100% */
+            }
+            /* Reduce Tailwind margins even more for landscape */
+            .mb-8 { margin-bottom: 1rem !important; }
+            .mb-6 { margin-bottom: 0.75rem !important; }
+            .mb-4 { margin-bottom: 0.5rem !important; }
+            .my-3 { margin-top: 0.25rem !important; margin-bottom: 0.25rem !important; }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4"> <!-- Base p-4, overridden by media queries -->
+
+    <!-- ... (rest of your HTML structure remains the same) ... -->
+    <div id="app" class="quiz-container">
+        <!-- Initial View -->
+        <div id="initialView" class="view text-center">
+            <h1 class="text-4xl font-bold mb-4">Friendship Meter <span class="text-2xl">✨</span></h1>
+            <p class="mb-8 text-slate-700 text-lg">Craft a quiz for your pals, or take one if you have a link!</p>
+            <button id="showCreateQuizBtn" class="btn btn-primary w-full mb-4">Craft Your Quiz!</button>
+            <p class="text-sm text-slate-500">Got a quiz link? Paste it in your browser's address bar.</p>
+            <div id="initialViewErrorContainer"></div>
+        </div>
+
+        <!-- Create Quiz View -->
+        <div id="createQuizView" class="view hidden">
+            <h2 class="text-3xl font-semibold mb-6 text-center">Create Your Quiz</h2>
+            <!-- Creator Name Entry -->
+            <div id="creatorNameEntrySection" class="mb-6">
+                <label for="creatorNameInput" class="block mb-2 font-medium text-slate-700">Your Name (The Quiz Master!):</label>
+                <input type="text" id="creatorNameInput" class="w-full p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="E.g., Alex">
+                <div id="creatorNameError" class="error-message my-3"></div>
+                <button id="submitCreatorNameBtn" class="btn btn-primary w-full">Let's Add Questions</button>
+            </div>
+            <!-- Creator Questions Section -->
+            <div id="creatorQuestionsSection" class="hidden">
+                <p class="text-md text-slate-700 mb-2 text-center">Alright, <span id="creatorNameDisplay" class="font-semibold text-blue-600"></span>, time for the questions!</p>
+                <p class="text-sm text-slate-500 mb-4 text-center">You need to answer 15 questions. You can skip, and new questions will appear. If new questions run out, you'll be asked to answer those you previously skipped.</p>
+                <div id="creatorInfoMessage" class="info-message hidden"></div>
+                <div id="creatorQuestionContainer" class="mb-4">
+                    <!-- Creator question will be injected here -->
+                </div>
+                <div id="creatorError" class="error-message mb-3"></div>
+                <div class="button-group mb-3">
+                    <button id="skipCreatorQuestionBtn" class="btn btn-skip">Skip This One</button>
+                    <button id="nextCreatorQuestionBtn" class="btn btn-primary">Submit Answer</button>
+                </div>
+                <button id="finishCreationBtn" class="btn btn-secondary w-full hidden">Finish & Get Link</button>
+            </div>
+        </div>
+
+        <!-- Share Link View -->
+        <div id="shareLinkView" class="view hidden text-center">
+            <h2 class="text-3xl font-semibold mb-4">Quiz Created! 🎉</h2>
+            <p class="mb-3 text-slate-700 text-lg">Share this magic link with your friends:</p>
+            <input type="text" id="shareLinkInput" readonly class="mb-3">
+            <button id="copyLinkBtn" class="btn btn-secondary w-full mb-4">Copy Link</button>
+            <button id="createNewQuizAgainBtn" class="btn btn-primary w-full">Create Another Quiz</button>
+        </div>
+
+        <!-- Enter Name View (for friend) -->
+        <div id="enterNameView" class="view hidden">
+            <h2 id="friendWelcomeTitle" class="text-3xl font-semibold mb-6 text-center">Friendship Quiz Time!</h2>
+            <label for="friendNameInput" class="block mb-2 font-medium text-slate-700">Your Name, Challenger:</label>
+            <input type="text" id="friendNameInput" class="w-full p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="E.g., Jamie">
+            <div id="nameError" class="error-message my-3"></div>
+            <button id="startQuizBtn" class="btn btn-primary w-full">Start the Challenge!</button>
+        </div>
+
+        <!-- Take Quiz View (for friend) -->
+        <div id="takeQuizView" class="view hidden">
+            <h2 class="text-3xl font-semibold mb-2 text-center">Let's Go! 🚀</h2>
+            <p id="quizTakerWelcome" class="text-md text-slate-700 mb-1 text-center"></p>
+            <p id="quizContextInfo" class="text-sm text-slate-600 font-medium mb-4 text-center"></p>
+            <div id="friendQuestionContainer" class="mb-4">
+                <!-- Friend question will be injected here -->
+            </div>
+            <div id="friendError" class="error-message mb-3"></div>
+            <button id="nextFriendQuestionBtn" class="btn btn-primary w-full">Next Question</button>
+            <button id="submitQuizBtn" class="btn btn-primary w-full hidden">Submit Answers</button>
+        </div>
+
+        <!-- Score View -->
+        <div id="scoreView" class="view hidden text-center">
+            <h2 id="scoreTitle" class="text-3xl font-semibold mb-3">Your Result! 🏆</h2>
+            <p class="text-6xl font-bold text-blue-700 mb-2"><span id="scoreDisplay">0</span></p>
+            <p id="scoreOutOf" class="text-xl text-slate-600 mb-6">out of 10</p>
+            <h3 class="text-2xl font-semibold mb-4">Leaderboard</h3>
+            <div id="leaderboard" class="mb-6 text-left">
+                <!-- Leaderboard items will be injected here -->
+            </div>
+            <button id="playAgainBtn" class="btn btn-primary w-full mb-3">Create or Take Another Quiz</button>
+            <button id="tryThisQuizAgainBtn" class="btn btn-secondary w-full">Try This Quiz Again (New Name?)</button>
+        </div>
+    </div>
+
+    <script>
+        // --- JavaScript remains exactly the same as your previous version ---
+        console.log("Script execution started.");
+
+        // --- Configuration & State ---
+        const ALL_QUESTIONS_POOL_SIZE = 30;
+        const NUM_QUESTIONS_FOR_CREATOR = 15;
+        const NUM_QUESTIONS_FOR_FRIEND_FROM_CREATOR_ANSWERS = 10;
+
+        const allQuestions = [
+            { question: "What's {NAME}'s favorite hobby? 🎨", options: ["Reading 📚", "Gaming 🎮", "Sports ⚽", "Cooking 🍳"] },
+            { question: "What's {NAME}'s dream vacation spot? ✈️", options: ["Beach Resort 🏖️", "Mountain Cabin 🏞️", "Big City 🏙️", "Historical Site 🏛️"] },
+            { question: "{NAME}'s favorite type of music is: 🎵", options: ["Pop 🎤", "Rock 🎸", "Electronic 🎧", "Classical 🎻"] },
+            { question: "{NAME}'s ideal weekend activity? 🤸", options: ["Going out with friends 🥳", "Staying in & relaxing 🛋️", "Exploring nature 🌲", "Learning something new 💡"] },
+            { question: "{NAME}'s go-to comfort food is: 🍕", options: ["Pizza 🍕", "Ice Cream 🍦", "Pasta 🍝", "Chocolate 🍫"] },
+            { question: "Which superpower would {NAME} choose? 🦸", options: ["Flight 🕊️", "Invisibility 👻", "Teleportation 🌀", "Super Strength 💪"] },
+            { question: "{NAME}'s favorite season is: ☀️", options: ["Spring 🌸", "Summer ☀️", "Autumn 🍁", "Winter ❄️"] },
+            { question: "{NAME} prefers: ☕", options: ["Coffee ☕", "Tea 🍵", "Juice 🍹", "Water 💧"] },
+            { question: "{NAME}'s favorite animal is a: 🐶", options: ["Dog 🐕", "Cat 🐈", "Bird 🐦", "Fish 🐠"] },
+            { question: "What's {NAME}'s personality type more like? 🤔", options: ["Introvert 🤫", "Extrovert 🎉", "Ambivert ⚖️", "Depends on the day 🤷"] },
+            { question: "If {NAME} could meet any celebrity, who would it be? ⭐", options: ["Actor/Actress 🎬", "Musician 🎶", "Scientist 🔬", "Author ✍️"] },
+            { question: "{NAME}'s favorite movie genre? 🎬", options: ["Comedy 😂", "Action 💥", "Sci-Fi 👽", "Drama 😢"] },
+            { question: "What would {NAME} rather do on a rainy day? ☔", options: ["Read a book 📖", "Watch movies 🎞️", "Play board games 🎲", "Bake something 🍰"] },
+            { question: "{NAME}'s biggest pet peeve? 😠", options: ["Loud chewing 😬", "Being late ⏰", "Slow walkers 🚶", "Spoilers 🤫"] },
+            { question: "What type of book does {NAME} enjoy most? 📖", options: ["Fantasy 🧙", "Mystery 🕵️", "Non-fiction 🧠", "Romance ❤️"] },
+            { question: "Is {NAME} a morning person or a night owl? ☀️🌙", options: ["Morning Lark 🌅", "Night Owl 🦉", "Flexible 🔄", "Always Tired 😴"] },
+            { question: "{NAME}'s ideal first date activity would be: 💑", options: ["Fancy Dinner 🍽️", "Casual Coffee ☕", "Fun Activity (e.g., bowling) 🎳", "Movie Night 🍿"] },
+            { question: "{NAME}'s favorite type of weather? ☁️", options: ["Sunny & Warm ☀️", "Cool & Crisp 🍂", "Rainy & Cozy 🌧️", "Snowy Wonderland ❄️"] },
+            { question: "How does {NAME} typically handle stress? 💆", options: ["Exercise 🏃", "Talk it out 🗣️", "Solitude/Meditation 🧘", "Creative Outlet (art, music) 🎨"] },
+            { question: "What's {NAME}'s go-to social media platform? 📱", options: ["Instagram 📸", "Twitter/X 🐦", "TikTok 🕺", "Facebook 👍"] },
+            { question: "Does {NAME} prefer sweet or savory snacks? 🥨🍫", options: ["Sweet (candy, cake) 🍭", "Savory (chips, pretzels) 🍿", "Both, equally! 🔄", "Depends on the mood 🤔"] },
+            { question: "{NAME}'s preferred mode of local transport? 🚲", options: ["Car 🚗", "Bicycle 🚲", "Public Transit (bus/train) 🚌", "Walking 🚶‍♀️"] },
+            { question: "What's a skill {NAME} would love to learn? 🛠️", options: ["A new language 🗣️", "A musical instrument 🎸", "Coding/Programming 💻", "Advanced cooking/baking 🍲"] },
+            { question: "{NAME}'s favorite type of board or card game? 🎲🃏", options: ["Strategy Game (e.g., Chess, Catan) 🏰", "Party Game (e.g., Charades) 🎉", "Classic Card Game (e.g., Poker, Uno) ♥️", "Trivia Game ❓"] },
+            { question: "How organized would {NAME} say they are? 📁", options: ["Very Organized (everything in its place) ✨", "Mostly Organized (knows where most things are) 👍", "A Bit Chaotic (creative mess) 🌪️", "Organized Chaos (system only they understand) 🤷‍♂️"] },
+            { question: "{NAME}'s honest opinion on pineapple on pizza? 🍍🍕", options: ["Absolutely love it! 😍", "Strongly dislike it! 🤢", "Indifferent / Don't care 🤷", "Haven't tried it / Willing to try 🤔"] },
+            { question: "What kind of art does {NAME} appreciate most? 🖼️", options: ["Classical (Renaissance, etc.) 🏛️", "Modern/Abstract 🌀", "Street Art/Graffiti 🎨", "Photography 📷"] },
+            { question: "What was {NAME}'s dream job as a child? 🧑‍🚀", options: ["Astronaut 🚀", "Doctor/Veterinarian 🩺", "Teacher 👩‍🏫", "Artist/Musician 🎨"] },
+            { question: "How important is punctuality to {NAME}? ⏱️", options: ["Very Important (always on time or early) 🚨", "Moderately Important (tries to be on time) 👍", "Relaxed about it (a few minutes late is okay) 😊", "Chronically Late (time is a suggestion) 😅"] },
+            { question: "{NAME}'s favorite way to spend a major holiday (like New Year)? 🎉", options: ["Big Family Gathering 👨‍👩‍👧‍👦", "Quiet Time at Home 🏡", "Traveling to a new place 🌍", "Volunteering or Community Event 💖"] }
+        ];
+
+        let currentView = 'initialView';
+        let creatorName = '';
+        let creatorQuestionsAnswered = [];
+        let creatorPresentedQuestionIndices = new Set();
+        let creatorSkippedQuestionIndices = [];
+        let currentQuestionOriginalIndexForCreator = -1;
+        let creatorAnsweredCount = 0;
+        let creatorDisplayedQuestionNumber = 1;
+        let friendName = '';
+        let friendAnswers = [];
+        let currentFriendDisplayIndex = 0;
+        let friendQuizSet = [];
+        let currentQuizDataFromUrl = null;
+        let views = {};
+        let initialViewErrorContainer, showCreateQuizBtn, creatorNameEntrySection, creatorNameInput,
+            creatorNameError, submitCreatorNameBtn, creatorQuestionsSection, creatorNameDisplay,
+            creatorInfoMessage, creatorQuestionContainer, creatorError,
+            skipCreatorQuestionBtn, nextCreatorQuestionBtn, finishCreationBtn, shareLinkInput,
+            copyLinkBtn, createNewQuizAgainBtn, friendWelcomeTitle, friendNameInput, nameError,
+            startQuizBtn, quizTakerWelcome, quizContextInfo, friendQuestionContainer,
+            nextFriendQuestionBtn, submitQuizBtn, friendError, scoreTitle, scoreDisplay,
+            scoreOutOf, leaderboardDiv, playAgainBtn, tryThisQuizAgainBtn;
+
+        function updateView(viewName) {
+            console.log("Updating view to:", viewName);
+            for (const key in views) {
+                if (views[key]) views[key].classList.add('hidden');
+            }
+            if (views[viewName]) {
+                views[viewName].classList.remove('hidden');
+                currentView = viewName;
+            } else {
+                console.error("Target view not found:", viewName);
+                if(views.initialView) views.initialView.classList.remove('hidden');
+                currentView = 'initialView';
+            }
+        }
+
+        function formatQuestionText(questionTemplate, name) {
+            return questionTemplate.replace(/{NAME}/g, name);
+        }
+
+        function getSelectedCreatorAnswer(displayNum) {
+            const radios = document.getElementsByName(`q_creator_new_${displayNum}`);
+            for (let i = 0; i < radios.length; i++) {
+                if (radios[i].checked) return radios[i].value;
+            }
+            return null;
+        }
+
+        function getSelectedFriendAnswer(displayIndex) {
+            const radios = document.getElementsByName(`q_friend_${displayIndex}`);
+            for (let i = 0; i < radios.length; i++) {
+                if (radios[i].checked) return radios[i].value;
+            }
+            return null;
+        }
+
+        function displayCreatorQuestionUI(questionOriginalIndex, currentDisplayNum) {
+            const qData = allQuestions[questionOriginalIndex];
+            const questionText = formatQuestionText(qData.question, "your");
+
+            if(!creatorQuestionContainer) { console.error("creatorQuestionContainer is null!"); return; }
+            creatorQuestionContainer.innerHTML = `
+                <div class="question-card" style="opacity:0;">
+                    <p class="font-semibold text-xl mb-4 text-slate-700">Question ${currentDisplayNum} of ${NUM_QUESTIONS_FOR_CREATOR}: ${questionText}</p>
+                    ${qData.options.map((option, index) => `
+                        <label class="option-label" id="option-c-${currentDisplayNum}-${index}">
+                            <input type="radio" name="q_creator_new_${currentDisplayNum}" value="${index}" class="mr-3">
+                            ${option}
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            setTimeout(() => { const card = creatorQuestionContainer.querySelector('.question-card'); if(card) card.style.opacity = 1; }, 50);
+            
+            qData.options.forEach((_, index) => {
+                const label = document.getElementById(`option-c-${currentDisplayNum}-${index}`);
+                if (label) {
+                    label.addEventListener('click', (e) => {
+                        if (e.target.tagName === 'INPUT') return; 
+                        document.querySelectorAll(`label[id^="option-c-${currentDisplayNum}-"]`).forEach(lbl => lbl.classList.remove('selected'));
+                        label.classList.add('selected');
+                        const radio = label.querySelector('input[type="radio"]');
+                        if (radio) radio.checked = true;
+                    });
+                }
+            });
+        }
+
+        function presentNextCreatorQuestion() {
+            if (creatorAnsweredCount >= NUM_QUESTIONS_FOR_CREATOR) {
+                if(creatorQuestionContainer) creatorQuestionContainer.innerHTML = `<p class="text-center text-lg text-green-600 p-4 bg-green-50 rounded-lg">Great! You've answered all ${NUM_QUESTIONS_FOR_CREATOR} questions. Ready to get your link?</p>`;
+                if(skipCreatorQuestionBtn) skipCreatorQuestionBtn.classList.add('hidden');
+                if(nextCreatorQuestionBtn) nextCreatorQuestionBtn.classList.add('hidden');
+                if(finishCreationBtn) finishCreationBtn.classList.remove('hidden');
+                if(creatorInfoMessage) creatorInfoMessage.classList.add('hidden');
+                return;
+            }
+
+            let questionToPresentOriginalIdx = -1;
+            let isFromSkippedList = false;
+
+            const potentialNewIndices = [];
+            for (let i = 0; i < ALL_QUESTIONS_POOL_SIZE; i++) {
+                if (!creatorPresentedQuestionIndices.has(i)) {
+                    potentialNewIndices.push(i);
+                }
+            }
+
+            if (potentialNewIndices.length > 0) {
+                const randIdxInPotential = Math.floor(Math.random() * potentialNewIndices.length);
+                questionToPresentOriginalIdx = potentialNewIndices[randIdxInPotential];
+            } else if (creatorSkippedQuestionIndices.length > 0) {
+                questionToPresentOriginalIdx = creatorSkippedQuestionIndices[0]; 
+                isFromSkippedList = true;
+            } else {
+                if(creatorError) creatorError.textContent = "Unexpected state: No more questions available but more answers needed.";
+                if(skipCreatorQuestionBtn) skipCreatorQuestionBtn.classList.add('hidden');
+                if(nextCreatorQuestionBtn) nextCreatorQuestionBtn.classList.add('hidden');
+                return;
+            }
+
+            currentQuestionOriginalIndexForCreator = questionToPresentOriginalIdx;
+            creatorPresentedQuestionIndices.add(questionToPresentOriginalIdx); 
+
+            displayCreatorQuestionUI(currentQuestionOriginalIndexForCreator, creatorDisplayedQuestionNumber);
+
+            if (creatorInfoMessage) {
+                if (isFromSkippedList && potentialNewIndices.length === 0) {
+                    creatorInfoMessage.textContent = `You must answer this question from your skipped list. ${NUM_QUESTIONS_FOR_CREATOR - creatorAnsweredCount} more answer(s) needed.`;
+                    creatorInfoMessage.classList.remove('hidden');
+                    if(skipCreatorQuestionBtn) skipCreatorQuestionBtn.classList.add('hidden'); 
+                } else {
+                    creatorInfoMessage.classList.add('hidden');
+                    if(skipCreatorQuestionBtn) skipCreatorQuestionBtn.classList.remove('hidden'); 
+                }
+            }
+            if(nextCreatorQuestionBtn) {
+                nextCreatorQuestionBtn.textContent = "Submit Answer";
+                nextCreatorQuestionBtn.classList.remove('hidden');
+            }
+            if(finishCreationBtn) finishCreationBtn.classList.add('hidden');
+        }
+
+        function displayFriendQuestion() {
+            if (currentFriendDisplayIndex >= friendQuizSet.length) {
+                if(friendError) friendError.textContent = "Error: Friend question index out of bounds."; return;
+            }
+            const q = friendQuizSet[currentFriendDisplayIndex];
+            if (!q) { if(friendError) friendError.textContent = "Error: Invalid question data for friend."; return; }
+
+            if(!friendQuestionContainer) { console.error("friendQuestionContainer is null!"); return; }
+            friendQuestionContainer.innerHTML = `
+                <div class="question-card" style="opacity:0;">
+                    <p class="font-semibold text-xl mb-4 text-slate-700">Question ${currentFriendDisplayIndex + 1} of ${friendQuizSet.length}: ${q.questionText}</p>
+                    ${q.options.map((option, index) => `
+                        <label class="option-label" id="option-f-${currentFriendDisplayIndex}-${index}">
+                            <input type="radio" name="q_friend_${currentFriendDisplayIndex}" value="${index}" class="mr-3">
+                            ${option}
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            setTimeout(() => { const card = friendQuestionContainer.querySelector('.question-card'); if(card) card.style.opacity = 1; }, 50);
+
+            q.options.forEach((_, index) => {
+                const label = document.getElementById(`option-f-${currentFriendDisplayIndex}-${index}`);
+                if (label) {
+                    label.addEventListener('click', (e) => {
+                        if (e.target.tagName === 'INPUT') return;
+                        document.querySelectorAll(`label[id^="option-f-${currentFriendDisplayIndex}-"]`).forEach(lbl => lbl.classList.remove('selected'));
+                        label.classList.add('selected');
+                        const radio = label.querySelector('input[type="radio"]');
+                        if (radio) radio.checked = true;
+                    });
+                }
+            });
+
+            if (currentFriendDisplayIndex === friendQuizSet.length - 1) {
+                if(nextFriendQuestionBtn) nextFriendQuestionBtn.classList.add('hidden');
+                if(submitQuizBtn) submitQuizBtn.classList.remove('hidden');
+            } else {
+                if(nextFriendQuestionBtn) nextFriendQuestionBtn.classList.remove('hidden');
+                if(submitQuizBtn) submitQuizBtn.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOMContentLoaded event fired.");
+            views.initialView = document.getElementById('initialView');
+            views.createQuizView = document.getElementById('createQuizView');
+            views.shareLinkView = document.getElementById('shareLinkView');
+            views.enterNameView = document.getElementById('enterNameView');
+            views.takeQuizView = document.getElementById('takeQuizView');
+            views.scoreView = document.getElementById('scoreView');
+            initialViewErrorContainer = document.getElementById('initialViewErrorContainer');
+            showCreateQuizBtn = document.getElementById('showCreateQuizBtn');
+            creatorNameEntrySection = document.getElementById('creatorNameEntrySection');
+            creatorNameInput = document.getElementById('creatorNameInput');
+            creatorNameError = document.getElementById('creatorNameError');
+            submitCreatorNameBtn = document.getElementById('submitCreatorNameBtn');
+            creatorQuestionsSection = document.getElementById('creatorQuestionsSection');
+            creatorNameDisplay = document.getElementById('creatorNameDisplay');
+            creatorInfoMessage = document.getElementById('creatorInfoMessage');
+            creatorQuestionContainer = document.getElementById('creatorQuestionContainer');
+            creatorError = document.getElementById('creatorError');
+            skipCreatorQuestionBtn = document.getElementById('skipCreatorQuestionBtn');
+            nextCreatorQuestionBtn = document.getElementById('nextCreatorQuestionBtn');
+            finishCreationBtn = document.getElementById('finishCreationBtn');
+            shareLinkInput = document.getElementById('shareLinkInput');
+            copyLinkBtn = document.getElementById('copyLinkBtn');
+            createNewQuizAgainBtn = document.getElementById('createNewQuizAgainBtn');
+            friendWelcomeTitle = document.getElementById('friendWelcomeTitle');
+            friendNameInput = document.getElementById('friendNameInput');
+            nameError = document.getElementById('nameError');
+            startQuizBtn = document.getElementById('startQuizBtn');
+            quizTakerWelcome = document.getElementById('quizTakerWelcome');
+            quizContextInfo = document.getElementById('quizContextInfo');
+            friendQuestionContainer = document.getElementById('friendQuestionContainer');
+            nextFriendQuestionBtn = document.getElementById('nextFriendQuestionBtn');
+            submitQuizBtn = document.getElementById('submitQuizBtn');
+            friendError = document.getElementById('friendError');
+            scoreTitle = document.getElementById('scoreTitle');
+            scoreDisplay = document.getElementById('scoreDisplay');
+            scoreOutOf = document.getElementById('scoreOutOf');
+            leaderboardDiv = document.getElementById('leaderboard');
+            playAgainBtn = document.getElementById('playAgainBtn');
+            tryThisQuizAgainBtn = document.getElementById('tryThisQuizAgainBtn');
+
+            if (showCreateQuizBtn) {
+                showCreateQuizBtn.addEventListener('click', () => {
+                    if(creatorNameEntrySection) creatorNameEntrySection.classList.remove('hidden');
+                    if(creatorQuestionsSection) creatorQuestionsSection.classList.add('hidden');
+                    if(creatorNameInput) creatorNameInput.value = '';
+                    if(creatorNameError) creatorNameError.textContent = '';
+                    updateView('createQuizView');
+                });
+            }
+
+            if (submitCreatorNameBtn) {
+                submitCreatorNameBtn.addEventListener('click', () => {
+                    const name = creatorNameInput ? creatorNameInput.value.trim() : '';
+                    if (!name) { if(creatorNameError) creatorNameError.textContent = 'Please enter your name!'; return; }
+                    if(creatorNameError) creatorNameError.textContent = '';
+                    creatorName = name;
+                    if(creatorNameDisplay) creatorNameDisplay.textContent = creatorName;
+                    if(creatorNameEntrySection) creatorNameEntrySection.classList.add('hidden');
+                    if(creatorQuestionsSection) creatorQuestionsSection.classList.remove('hidden');
+                    creatorQuestionsAnswered = [];
+                    creatorPresentedQuestionIndices = new Set();
+                    creatorSkippedQuestionIndices = [];
+                    currentQuestionOriginalIndexForCreator = -1;
+                    creatorAnsweredCount = 0;
+                    creatorDisplayedQuestionNumber = 1;
+                    if(creatorError) creatorError.textContent = '';
+                    if(creatorInfoMessage) creatorInfoMessage.classList.add('hidden');
+                    presentNextCreatorQuestion();
+                    if(nextCreatorQuestionBtn) nextCreatorQuestionBtn.classList.remove('hidden');
+                    if(skipCreatorQuestionBtn) skipCreatorQuestionBtn.classList.remove('hidden');
+                    if(finishCreationBtn) finishCreationBtn.classList.add('hidden');
+                });
+            }
+
+            if(skipCreatorQuestionBtn) { 
+                skipCreatorQuestionBtn.addEventListener('click', () => { 
+                    if(creatorError) creatorError.textContent = '';
+                    if (!creatorSkippedQuestionIndices.includes(currentQuestionOriginalIndexForCreator) && currentQuestionOriginalIndexForCreator !== -1) {
+                        creatorSkippedQuestionIndices.push(currentQuestionOriginalIndexForCreator);
+                    }
+                    presentNextCreatorQuestion();
+                }); 
+            }
+            
+            if (nextCreatorQuestionBtn) { 
+                nextCreatorQuestionBtn.addEventListener('click', () => { 
+                    if(creatorError) creatorError.textContent = '';
+                    const selectedAnswer = getSelectedCreatorAnswer(creatorDisplayedQuestionNumber);
+                    if (selectedAnswer === null) {
+                        if(creatorError) creatorError.textContent = 'Please select an answer.';
+                        return;
+                    }
+                    creatorQuestionsAnswered.push({
+                        originalIndex: currentQuestionOriginalIndexForCreator,
+                        creatorAnswer: parseInt(selectedAnswer)
+                    });
+                    creatorAnsweredCount++;
+                    const skippedIdxPos = creatorSkippedQuestionIndices.indexOf(currentQuestionOriginalIndexForCreator);
+                    if (skippedIdxPos > -1) {
+                        creatorSkippedQuestionIndices.splice(skippedIdxPos, 1);
+                    }
+                    creatorDisplayedQuestionNumber++; 
+                    presentNextCreatorQuestion();
+                }); 
+            }
+
+            if (finishCreationBtn) {
+                 finishCreationBtn.addEventListener('click', () => {
+                    const quizDataForLink = {
+                        cName: creatorName,
+                        cQuestions: creatorQuestionsAnswered.map(q => ({
+                            originalIndex: q.originalIndex,
+                            creatorAnswer: q.creatorAnswer 
+                        })),
+                    };
+                    if (quizDataForLink.cQuestions.length !== NUM_QUESTIONS_FOR_CREATOR) {
+                         if(creatorError) creatorError.textContent = `Error: Quiz incomplete. Expected ${NUM_QUESTIONS_FOR_CREATOR} answered questions.`;
+                         console.error("Data for link generation issue:", quizDataForLink.cQuestions);
+                         return;
+                    }
+                    const quizJson = JSON.stringify(quizDataForLink);
+                    const encodedQuiz = btoa(quizJson);
+                    const link = `${window.location.origin}${window.location.pathname}?quiz=${encodedQuiz}`;
+                    if(shareLinkInput) shareLinkInput.value = link;
+                    updateView('shareLinkView');
+                });
+            }
+            
+            if (copyLinkBtn) {
+                copyLinkBtn.addEventListener('click', () => {
+                    if(shareLinkInput) {
+                        shareLinkInput.select();
+                        document.execCommand('copy');
+                        copyLinkBtn.textContent = 'Copied!';
+                        setTimeout(() => { copyLinkBtn.textContent = 'Copy Link'; }, 2000);
+                    }
+                });
+            }
+            if (createNewQuizAgainBtn) { createNewQuizAgainBtn.addEventListener('click', () => { window.location.href = window.location.pathname + (window.location.hash.split('?')[0] || ''); });}
+
+            if (startQuizBtn) {
+                startQuizBtn.addEventListener('click', () => {
+                    const name = friendNameInput ? friendNameInput.value.trim() : '';
+                    if (!name) { if(nameError) nameError.textContent = 'Please enter your name!'; return; }
+                    if(nameError) nameError.textContent = '';
+                    friendName = name;
+                    if (!currentQuizDataFromUrl || !currentQuizDataFromUrl.creatorQuestionnaireData) {
+                        if(nameError) nameError.textContent = 'Error: Quiz data is missing.'; return;
+                    }
+                    if(quizTakerWelcome) quizTakerWelcome.textContent = `Good luck, ${friendName}!`;
+                    if(quizContextInfo && currentQuizDataFromUrl) quizContextInfo.textContent = `Answering ${currentQuizDataFromUrl.creatorName}'s Quiz`;
+                    let allCreatorAnsweredQuestions = [...currentQuizDataFromUrl.creatorQuestionnaireData];
+                    allCreatorAnsweredQuestions.sort(() => 0.5 - Math.random()); 
+                    const selectedForFriendRaw = allCreatorAnsweredQuestions.slice(0, NUM_QUESTIONS_FOR_FRIEND_FROM_CREATOR_ANSWERS);
+                    friendQuizSet = selectedForFriendRaw.map(cq => {
+                        const fullQuestionData = allQuestions[cq.originalIndex];
+                        if (!fullQuestionData) {
+                            console.error(`Missing question data for originalIndex: ${cq.originalIndex}`);
+                            return null; 
+                        }
+                        return {
+                            originalIndex: cq.originalIndex,
+                            correctAnswerIndex: cq.creatorAnswer,
+                            questionText: formatQuestionText(fullQuestionData.question, currentQuizDataFromUrl.creatorName),
+                            options: fullQuestionData.options
+                        };
+                    }).filter(q => q !== null); 
+                    if (friendQuizSet.length < NUM_QUESTIONS_FOR_FRIEND_FROM_CREATOR_ANSWERS && friendQuizSet.length > 0) {
+                         console.warn(`Could only prepare ${friendQuizSet.length} questions for friend due to missing data.`);
+                    } else if (friendQuizSet.length === 0) {
+                        if(friendError) friendError.textContent = "Could not load questions for the quiz.";
+                        return;
+                    }
+                    currentFriendDisplayIndex = 0;
+                    friendAnswers = [];
+                    if(friendError) friendError.textContent = '';
+                    displayFriendQuestion();
+                    updateView('takeQuizView');
+                });
+            }
+
+            if (nextFriendQuestionBtn) {
+                nextFriendQuestionBtn.addEventListener('click', () => {
+                    if(friendError) friendError.textContent = '';
+                    const answer = getSelectedFriendAnswer(currentFriendDisplayIndex);
+                    if (answer === null) { if(friendError) friendError.textContent = 'Please select an answer.'; return; }
+                    friendAnswers.push({
+                        questionOriginalIndex: friendQuizSet[currentFriendDisplayIndex].originalIndex,
+                        selectedAnswerIndex: parseInt(answer),
+                        correctAnswerIndex: friendQuizSet[currentFriendDisplayIndex].correctAnswerIndex
+                    });
+                    currentFriendDisplayIndex++;
+                    if (currentFriendDisplayIndex < friendQuizSet.length) {
+                        displayFriendQuestion();
+                    } else {
+                        console.error("Reached end of friend questions unexpectedly via next button.");
+                    }
+                });
+            }
+
+            if (submitQuizBtn) {
+                submitQuizBtn.addEventListener('click', () => {
+                    if(friendError) friendError.textContent = '';
+                    if (friendAnswers.length < friendQuizSet.length) {
+                        const answer = getSelectedFriendAnswer(currentFriendDisplayIndex);
+                        if (answer === null) { if(friendError) friendError.textContent = 'Please select an answer for the last question.'; return; }
+                        friendAnswers.push({
+                            questionOriginalIndex: friendQuizSet[currentFriendDisplayIndex].originalIndex,
+                            selectedAnswerIndex: parseInt(answer),
+                            correctAnswerIndex: friendQuizSet[currentFriendDisplayIndex].correctAnswerIndex
+                        });
+                    }
+                    let score = 0;
+                    friendAnswers.forEach(ans => {
+                        if (ans.selectedAnswerIndex === ans.correctAnswerIndex) {
+                            score++;
+                        }
+                    });
+                    if(scoreDisplay) scoreDisplay.textContent = score;
+                    if(scoreOutOf) scoreOutOf.textContent = `out of ${friendQuizSet.length}`;
+                    if(scoreTitle) scoreTitle.textContent = `${friendName}, Your Result! 🏆`;
+                    let leaderboard = [];
+                    try {
+                        const storedLeaderboard = localStorage.getItem('friendshipQuizLeaderboard_' + currentQuizDataFromUrl.encoded);
+                        if (storedLeaderboard) leaderboard = JSON.parse(storedLeaderboard);
+                    } catch (e) { console.error("Error reading leaderboard from LS", e); }
+                    const alreadySubmitted = leaderboard.some(entry => entry.name.toLowerCase() === friendName.toLowerCase());
+                    if(!alreadySubmitted) {
+                        leaderboard.push({ name: friendName, score: score });
+                        leaderboard.sort((a, b) => b.score - a.score); 
+                        try {
+                            localStorage.setItem('friendshipQuizLeaderboard_' + currentQuizDataFromUrl.encoded, JSON.stringify(leaderboard.slice(0,10))); 
+                        } catch (e) { console.error("Error saving leaderboard to LS", e); }
+                    } else {
+                        if(friendError) friendError.innerHTML = `<p class="info-message">You've already submitted for this quiz, ${friendName}. Your previous score is on the board.</p>`;
+                    }
+                    if(leaderboardDiv) {
+                        leaderboardDiv.innerHTML = leaderboard.length > 0 ?
+                            leaderboard.map((entry, index) => `
+                                <div class="leaderboard-item">
+                                    <span class="rank">#${index + 1}</span>
+                                    <span class="name">${entry.name}</span>
+                                    <span class="score">${entry.score} pts</span>
+                                </div>
+                            `).join('') : '<p class="text-slate-500 text-center py-2">Be the first to take the quiz!</p>';
+                    }
+                    updateView('scoreView');
+                });
+            }
+            
+            if(playAgainBtn) { playAgainBtn.addEventListener('click', () => { window.location.href = window.location.pathname + (window.location.hash.split('?')[0] || ''); });}
+            if(tryThisQuizAgainBtn) {
+                tryThisQuizAgainBtn.addEventListener('click', () => {
+                    if(currentQuizDataFromUrl && currentQuizDataFromUrl.encoded) {
+                        window.location.href = `${window.location.pathname}?quiz=${currentQuizDataFromUrl.encoded}`;
+                    } else {
+                        window.location.href = window.location.pathname + (window.location.hash.split('?')[0] || '');
+                    }
+                });
+            }
+
+            function initializeApp() {
+                updateView('initialView');
+                const urlParams = new URLSearchParams(window.location.search);
+                const rawQuizDataFromLink = urlParams.get('quiz');
+                if (rawQuizDataFromLink) {
+                    try {
+                        const decodedQuizJson = atob(rawQuizDataFromLink);
+                        const parsedQuizData = JSON.parse(decodedQuizJson);
+                        if (parsedQuizData && parsedQuizData.cName && Array.isArray(parsedQuizData.cQuestions) && parsedQuizData.cQuestions.length === NUM_QUESTIONS_FOR_CREATOR) {
+                            const isValidQuestionnaire = parsedQuizData.cQuestions.every(
+                                item => typeof item.originalIndex === 'number' && item.originalIndex >= 0 && item.originalIndex < ALL_QUESTIONS_POOL_SIZE &&
+                                        typeof item.creatorAnswer === 'number' 
+                            );
+                            if (!isValidQuestionnaire) { 
+                                throw new Error(`Invalid question data structure in link.`);
+                            }
+                            currentQuizDataFromUrl = {
+                                creatorName: parsedQuizData.cName,
+                                creatorQuestionnaireData: parsedQuizData.cQuestions, 
+                                encoded: rawQuizDataFromLink 
+                            };
+                            if(friendWelcomeTitle) friendWelcomeTitle.textContent = `Welcome to ${currentQuizDataFromUrl.creatorName}'s Friendship Quiz!`;
+                            updateView('enterNameView');
+                        } else {
+                            throw new Error("Invalid quiz data structure or question count in link.");
+                        }
+                    } catch (e) {
+                        console.error("Error parsing quiz data from URL:", e.message);
+                        updateView('initialView'); 
+                        if(initialViewErrorContainer) initialViewErrorContainer.innerHTML = `<p class="error-message text-center my-4">The quiz link seems to be invalid or corrupted. (Error: ${e.message}).</p>`;
+                    }
+                }
+            }
+            initializeApp();
+        });
+        console.log("Script execution finished defining DOMContentLoaded listener.");
+    </script>
+</body>
+</html>
